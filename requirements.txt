@@ -1,0 +1,5 @@
+bsdiff4
+PyGithub
+python-dotenv
+pyelftools
+west
