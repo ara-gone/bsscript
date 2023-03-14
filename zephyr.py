@@ -56,9 +56,9 @@ def init(version):
         shutil.rmtree(src+'zephyr')
         shutil.rmtree(src+'.west')
 
-    # download west build system for version
-    # os.system('pip uninstall west')
-    # os.system('pip install west=={}'.format(version))
+    # download west build system for version (VERY SLOW!)
+    #   os.system('pip uninstall west')
+    #   os.system('pip install west=={}'.format(version))
     os.system('west init -m https://github.com/zephyrproject-rtos/zephyr --mr {}'.format(version))
 
 def update():
@@ -67,7 +67,24 @@ def update():
 def build(device, sample, label):
 
     # build that sample!
-    os.system('west -v build -p -b {} samples/{} -D CONF_FILE=prj.conf'.format(device, sample))
+    os.system('west build -p -b {} samples/{} -D CONF_FILE=prj.conf'.format(device, sample))
+
+    # copy all object files into new directory with new folder
+    print("stripping all object files...")
+    os.system('find build \( -name "*.obj" -o -name "*.o" -o -name "*.a" \) > objoa_list.txt')
+
+    if os.path.exists('objoa_list.txt'):
+        path = 'objects/zephyr_{}/{}/'.format(label, sample)
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+
+        with open('objoa_list.txt') as f:
+            ls = f.readlines()
+            for l in ls:
+                src_path = l.replace('\n', '')
+                wl = src_path.split('/')
+                # print('strip --strip-debug --strip-unneeded {} -o {}{}'.format(src_path, path, wl[len(wl)-1]))
+                os.system('strip --strip-debug --strip-unneeded {} -o {}{}'.format(src_path, path, wl[len(wl)-1]))
 
     # copy the .elf files into folder with subdirs for each [new] sample separated by year
     src = R"/mnt/c/Users/dmara/bsscript/build/zephyr/"
@@ -149,22 +166,22 @@ def main():
 
     # init('v3.1.0')
 
-    # update()
+    update()
 
     # download_commits(atk, 'samples/bluetooth/handsfree', 0)
-    # build('qemu_x86', 'hello_world', 'v3.1.0')
-    # build('qemu_x86', 'bluetooth/central_hr', 'v3.1.0')
+    build('qemu_x86', 'hello_world', 'v3.1.0')
+    build('qemu_x86', 'bluetooth/central_hr', 'v3.1.0')
     build('qemu_x86', 'synchronization', 'v3.1.0')
-    # build('qemu_x86', 'philosophers', 'v3.1.0')
-    # build('qemu_x86', 'bluetooth/mesh_demo', 'v3.1.0')
-    # build('qemu_x86', 'bluetooth/handsfree', 'v3.1.0')
-    # build('qemu_x86', 'bluetooth/beacon', 'v3.1.0')
+    build('qemu_x86', 'philosophers', 'v3.1.0')
+    build('qemu_x86', 'bluetooth/mesh_demo', 'v3.1.0')
+    build('qemu_x86', 'bluetooth/handsfree', 'v3.1.0')
+    build('qemu_x86', 'bluetooth/beacon', 'v3.1.0')
 
     # init('v2.7.2')
     # update()
     # download_commits(atk, 'samples/hello_world', 2)
     # download_commits(atk, 'samples/basic/blinky', 2)
-    download_commits(atk, 'samples/synchronization', 2)
+    # download_commits(atk, 'samples/synchronization', 2)
     # download_commits(atk, 'samples/philosophers', 2)
     # download_commits(atk, 'samples/bluetooth/beacon', 2)
     # download_commits(atk, 'samples/bluetooth/central_hr', 2)
@@ -173,7 +190,7 @@ def main():
     
     # build('qemu_x86', 'hello_world', 'v2.7.2')
     # build('stm32f746g_disco', 'basic/blinky', 'v2.7.2')
-    build('qemu_x86', 'synchronization', 'v2.7.2')
+    # build('qemu_x86', 'synchronization', 'v2.7.2')
     # build('qemu_x86', 'philosophers', 'v2.7.2')
     # build('qemu_x86', 'bluetooth/beacon', 'v2.7.2')
     # build('qemu_x86', 'bluetooth/central_hr', 'v2.7.2')
